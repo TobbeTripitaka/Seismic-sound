@@ -1,12 +1,12 @@
-import obspy
 import numpy as np
-from scipy.io.wavfile import write
+import obspy
 from obspy.io.segy.segy import _read_segy
+from scipy.io.wavfile import write
 
-# Exemple 1
 
+# Exemple 1 SEG-Y
 filename = 'chrirp_chirp.sgy'
-tracks = {1,12,24,45,70,92}
+tracks = {1,12,24,45,70}
 rate = 3200 #Hz
 
 stream = _read_segy(filename, headonly=True)
@@ -17,9 +17,7 @@ for track in tracks:
     scaled_norm = scaled / scaled.ptp(0)*2**4
     write('%s_sweep.wav'%track, rate, scaled_norm[::1])
 
-
-# Exemple 2
-
+# Exemple 2 miniSEED
 files = 'IRIS_STATION'
 rate = 8000 #Wave file sampling frequency
 
