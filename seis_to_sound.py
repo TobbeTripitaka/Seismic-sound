@@ -1,29 +1,28 @@
 import numpy as np
-import obspy
-from obspy.io.segy.segy import _read_segy
 from scipy.io.wavfile import write
+from obspy.io.segy.segy import _read_segy
+from obspy import read
 
+def norm(data):
+    return (data - np.min(data))/np.ptp(data).astype('float')
 
-# Exemple 1 SEG-Y
-filename = 'chrirp_chirp.sgy'
-tracks = {1,12,24,45,70}
-rate = 3200 #Hz
+segy_file = 'data/sweep.sgy'
+tracks = [1,12,24,45,70,92]
+rate = 3600 #Hz
 
-stream = _read_segy(filename, headonly=True)
+stream = _read_segy(segy_file, headonly=True)
 data = np.stack(t.data for t in stream.traces).T
 
 for track in tracks:
-    scaled = np.int16(data[:,track])
-    scaled_norm = scaled / scaled.ptp(0)*2**4
-    write('%s_sweep.wav'%track, rate, scaled_norm[::1])
+    write('playlist/%s_sweep.wav'%track, rate, norm(data[:,track]))
+    
+seed_file = 'data/rumble'
+rate = 60000 #Wav file sampling frequency
 
-# Exemple 2 miniSEED
-files = 'IRIS_STATION'
-rate = 8000 #Wave file sampling frequency
+seed= read('%s.BHE' %seed_file)
+seed+= read('%s.BHN' %seed_file)
+seed+= read('%s.BHZ' %seed_file)
 
-seed= obspy.read('%s.BHE' %filename)
-seed+= obspy.read('%s.BHN' %filename)
-seed+= obspy.read('%s.BHZ' %filename)
-
+start = 2500000
 for i, tr in enumerate(seed):
-    write('%s_%s_boom_whoom.wav'%(i,files), rate, np.int16(tr.data)[::1])
+    write('playlist/ch_%s.wav'%i, rate, norm(tr.data)[start:])
